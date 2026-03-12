@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import * as scanModel from '../models/scanModel.js';
 import { refreshSummaryForMeal } from '../services/dailySummariesService.js';
+import { toCloudFrontUrl } from '../utils/urlHelper.js';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -123,7 +124,7 @@ export async function analyzeFood(req, res) {
       });
     }
 
-    const imageUrl = req.file.location; // S3 버킷에 저장된 결과 URL
+    const imageUrl = toCloudFrontUrl(req.file.location); // S3 → CloudFront URL 변환
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -204,7 +205,7 @@ export async function saveAi(req, res) {
       return res.status(400).json({ success: false, message: '이미지 파일(image)이 필요합니다.' });
     }
 
-    const imageUrl = req.file.location;
+    const imageUrl = toCloudFrontUrl(req.file.location);
     const scanResultObj = typeof scan_result === 'string' ? JSON.parse(scan_result) : scan_result;
     
     const saved = await scanModel.saveAiScanData(userId, imageUrl, scanResultObj);
@@ -238,7 +239,7 @@ export async function saveDiary(req, res) {
     }
 
     // 1. 이미지가 업로드되었는데 foods(식단 정보)가 없으면 직접 AI 분석 실행
-    let finalImageUrl = req.file ? req.file.location : image_url;
+    let finalImageUrl = req.file ? toCloudFrontUrl(req.file.location) : toCloudFrontUrl(image_url);
     let finalAiScanId = ai_scan_id;
 
     if (req.file && !scan_result && (!foods || (Array.isArray(foods) && foods.length === 0) || foods === '[]')) {
