@@ -6,6 +6,7 @@ import multer from "multer";
 import multerS3 from "multer-s3";
 import path from "path";
 import s3 from "../config/s3.js";
+import { toCloudFrontUrl } from "../utils/urlHelper.js";
 
 const router = express.Router();
 
@@ -262,7 +263,7 @@ router.post("/", upload.single("image"), async (req, res) => {
                     sugar: newEntry.snap_sugars != null ? Number(newEntry.snap_sugars) : null
                 },
                 memo: newEntry.memo || null,
-                imageUrl: newEntry.image_url || null
+                imageUrl: toCloudFrontUrl(newEntry.image_url) || null
             }
         });
 
