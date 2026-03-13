@@ -18,73 +18,59 @@ const openai = new OpenAI({
 
 /**
  * [GET] /api/recommend/random
- * 초기 랜덤 식단 조회 데이터 (5개) 반환
+ * 명세서 외 기존 사용 함수 (에러 방지용)
  */
 export const getRandomFoodList = async (req, res) => {
   try {
     const foods = await getRandomFoods(5);
-
     return res.status(200).json({
       success: true,
       message: '랜덤 식단 조회 완료.',
       foods: foods.map((f) => ({
-        id: f.id,
+        id: String(f.id),
         name: f.name,
-        image: f.image,
-        kcal: f.kcal,
-        carbs: f.carbs,
+        calories: f.kcal,
+        carbohydrates: f.carbs,
         protein: f.protein,
         fat: f.fat,
         sugar: f.sugar,
-        status: f.status,
       })),
     });
   } catch (error) {
     console.error('getRandomFoodList 에러:', error);
-    return res
-      .status(500)
-      .json({ success: false, message: '서버 내부 오류가 발생했습니다.' });
+    return res.status(500).json({ success: false, message: '서버 에러' });
   }
 };
 
 /**
  * [GET] /api/recommend/related
- * 키워드로 관련 음식 검색 (특정 접두어로 시작하는 이름 제외)
- * 쿼리: keyword, exclude, limit(선택)
  */
 export const getRelatedFoodList = async (req, res) => {
   try {
     const keyword = req.query.keyword || '';
-    const exclude = req.query.exclude || '';
     const limit = Math.min(parseInt(req.query.limit, 10) || 5, 20);
-
-    const foods = await searchRelatedFoods(keyword, exclude, limit);
-
+    const foods = await searchRelatedFoods(keyword, '', limit);
     return res.status(200).json({
       success: true,
       foods: foods.map((f) => ({
-        id: f.id,
+        id: String(f.id),
         name: f.name,
-        image: f.image,
-        kcal: f.kcal,
-        carbs: f.carbs,
+        calories: f.kcal,
+        carbohydrates: f.carbs,
         protein: f.protein,
         fat: f.fat,
         sugar: f.sugar,
-        status: f.status,
       })),
     });
   } catch (error) {
     console.error('getRelatedFoodList 에러:', error);
-    return res
-      .status(500)
-      .json({ success: false, message: '서버 내부 오류가 발생했습니다.' });
+    return res.status(500).json({ success: false, message: '서버 에러' });
   }
 };
 
 /**
- * [POST] /api/recommend/save
- * AI 식단 추천 및 저장 (전문 영양사 대화형 응답 + [DATA] 태그로 메뉴 추출)
+ * [POST] /api/chat/recommend
+ * 명세서 양식 준수 (reply, foods 구조)
  */
 export const recommendFoodsByAI = async (req, res) => {
   try {
@@ -95,7 +81,7 @@ export const recommendFoodsByAI = async (req, res) => {
         .json({ success: false, message: '인증 정보가 없습니다.' });
     }
 
-    const { messages, inputMessage } = req.body;
+    const { messages, inputMessage, userNutrients } = req.body;
     const finalInput =
       (inputMessage && inputMessage.trim()) || '추천 메뉴를 알려주세요.';
 
@@ -105,43 +91,27 @@ export const recommendFoodsByAI = async (req, res) => {
         .json({ success: false, message: '올바르지 않은 대화 요청입니다.' });
     }
 
-    // 1. 사용자 프로필 및 알레르기/식이제한 컨텍스트
+    // 1. 사용자 컨텍스트 준비
     const user = await findUserById(userId);
-    let userContext = '목표: 건강 유지';
-    if (user) {
-      userContext = `사용자 목표: ${user.goals}, 식이 제한: ${user.dietary_restrictions}, 알레르기: ${user.allergies || '없음'}, 키: ${user.height}cm, 체중: ${user.weight}kg.`;
+    let userContext = user
+      ? `목표: ${user.goals}, 제한: ${user.dietary_restrictions}, 알레르기: ${user.allergies || '없음'}`
+      : '일반 건강 식단';
+
+    if (userNutrients) {
+      userContext += `, 부족영양: ${userNutrients.deficiency}, 목표: ${userNutrients.dailyGoal}, 상태: ${userNutrients.status}`;
     }
 
-    const filterTags = [
-      '#고단백',
-      '#다이어트',
-      '#비건',
-      '#저탄수',
-      '#0kcal',
-      '#저당',
-      '#과일',
-      '#저지방',
-      '#고지방',
-      '#고칼로리',
-      '#고당',
-    ];
-
-    // 2. 전문 영양사 프롬프트 (대화형 응답 + [DATA] JSON 포함)
+    // 2. 프롬프트 설정 (태그 및 특수문자 제거)
     const promptMessages = [
       {
         role: 'system',
-        content: `당신은 전문 영양사입니다. 사용자의 요청에 맞춰 한국의 실제 식단을 추천하세요.
-[응답 규칙]
-1. 모든 대화는 한국어로 진행하며 친절하게 설명하세요.
-2. 추천하는 구체적인 메뉴 데이터는 반드시 답변 마지막에 [DATA]와 [/DATA] 태그로 감싸서 JSON 배열 형식으로 포함하세요.
-3. JSON 구조: [{"name": "음식명", "description": "설명", "tags": ["태그1", "태그2"]}]
-4. tags는 반드시 다음 목록에서만 선택하세요: ${filterTags.join(', ')}.
-5. 한 번에 3~5개의 메뉴를 추천하고 실제 음식 DB에서 검색 가능한 메뉴명을 사용하세요.
-6. 추천된 메뉴는 중복되지 않도록 하세요.
-7. 없는 식단을 만들어내지 마세요.
-8. 텍스트 답변에서는 특수문자 *, &, ^, %, $, #, @, ;를 출력하지 마세요.
-9. 답변 양식: 간단한 설명 후 번호. 메뉴이름: 추천이유 순서로 작성하고 마지막에 카드 확인 권유 문구를 넣으세요.
-[사용자정보] ${userContext}`,
+        content: `당신은 전문 영양사입니다. 사용자의 영양 상태에 맞춰 식단을 추천하세요.
+          [응답 규칙]
+          1. 한국어로 친절하게 답변하되, 답변 내에 #, *, &, @ 등 특수문자와 태그는 절대 사용하지 마세요.
+          2. 추천 메뉴 데이터는 반드시 마지막에 [DATA][{"name": "음식명", "description": "설명"}][/DATA] 형식으로 포함하세요.
+          3. 실제 음식 DB에서 검색 가능한 메뉴명을 사용하세요.
+          4. 답변 양식: 간단한 설명 후 '1. 메뉴이름: 추천이유' 순서로 작성하고 마지막에 카드 확인 권유 문구를 넣으세요.
+          [사용자정보] ${userContext}`,
       },
       ...messages
         .filter(
@@ -154,78 +124,89 @@ export const recommendFoodsByAI = async (req, res) => {
       { role: 'user', content: finalInput },
     ];
 
+    // 3. AI 응답 생성
     let aiResponseContent = '';
-
     if (process.env.OPENAI_API_KEY) {
       const completion = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
         messages: promptMessages,
-        temperature: 0.7,
+        temperature: 0.3,
       });
       aiResponseContent = completion.choices[0].message.content;
     } else {
-      console.warn('OPENAI_API_KEY is not set. Using fallback response.');
       aiResponseContent =
-        '식단을 추천합니다. [DATA][{"name": "닭가슴살", "description": "고단백", "tags": ["고단백"]}][/DATA]';
+        '식단을 추천합니다. [DATA][{"name": "닭가슴살", "description": "고단백"}][/DATA]';
     }
 
-    // 3. [DATA] 태그에서 음식명 추출
+    // 4. [DATA] 파싱 및 텍스트 정제
     const dataRegex = /\[DATA\]([\s\S]*?)\[\/DATA\]/;
     const match = aiResponseContent.match(dataRegex);
     let searchKeywords = [];
-    const cleanTextMessage = aiResponseContent.replace(dataRegex, '').trim();
+    const cleanTextMessage = aiResponseContent
+      .replace(dataRegex, '')
+      .replace(/[#*]/g, '')
+      .trim();
 
     if (match && match[1]) {
       try {
         const parsedData = JSON.parse(match[1]);
-        searchKeywords = parsedData.map((item) => item.name).filter(Boolean);
+        searchKeywords = parsedData
+          .map((item) => item.name.trim())
+          .filter(Boolean);
       } catch (e) {
-        console.error('AI [DATA] JSON 파싱 에러:', e);
+        console.error('JSON 파싱 에러:', e);
       }
     }
 
-    // 4. DB에서 음식 검색
-    let recommendedFoods = await searchFoodsByKeywords(searchKeywords);
-    if (!recommendedFoods || recommendedFoods.length === 0) {
-      recommendedFoods = await getRandomFoods(3);
+    // 5. DB 검색 및 중복 제거
+    let rawFoods = await searchFoodsByKeywords(searchKeywords);
+    const uniqueFoodsMap = new Map();
+    rawFoods.forEach((f) => {
+      if (!uniqueFoodsMap.has(f.name)) uniqueFoodsMap.set(f.name, f);
+    });
+
+    let recommendedFoods = searchKeywords
+      .map((name) => uniqueFoodsMap.get(name))
+      .filter(Boolean);
+
+    if (recommendedFoods.length === 0) {
+      // 초기 랜덤 로드 외 추천 플로우에서는 랜덤 추천을 사용하지 않음
+      recommendedFoods = [];
     }
 
-    // 5. 알레르기·식이제한에 맞지 않는 음식 제외
+    // 6. 필터링 및 명세서 양식 매핑
     const excluded = getExcludedKeywords(user || {});
-    recommendedFoods = filterFoodsByUser(recommendedFoods, excluded);
-    recommendedFoods = recommendedFoods.slice(0, 3);
+    recommendedFoods = filterFoodsByUser(recommendedFoods, excluded).slice(
+      0,
+      5,
+    );
 
     const responseFoodsList = recommendedFoods.map((f) => ({
-      id: f.id,
+      id: String(f.id),
       name: f.name,
-      image: f.image,
-      kcal: f.kcal,
-      carbs: f.carbs,
+      calories: f.kcal,
+      carbohydrates: f.carbs,
       protein: f.protein,
       fat: f.fat,
       sugar: f.sugar,
-      status: f.status,
     }));
 
-    // 6. 추천 기록 DB 저장
-    const recId = uuidv4();
+    // 7. 저장
     await saveRecommendationResult(
-      recId,
+      uuidv4(),
       userId,
       responseFoodsList,
       cleanTextMessage,
     );
 
-    // 7. 결과 반환 (프론트 chatContent/reply 기대)
+    // 8. 반환 (reply 필드명 준수)
     return res.status(200).json({
       success: true,
-      chatContent: cleanTextMessage,
+      reply: cleanTextMessage,
       foods: responseFoodsList,
     });
   } catch (error) {
     console.error('recommendFoodsByAI 에러:', error);
-    return res
-      .status(500)
-      .json({ success: false, message: '서버 내부 오류가 발생했습니다.' });
+    return res.status(500).json({ success: false, message: '서버 오류' });
   }
 };
