@@ -38,12 +38,25 @@ export async function foodTags(req, res) {
 
 export async function reportReview(req, res) {
   try {
-    const aiPayload = req.body;
-    const content = await generateReportReview(aiPayload);
-    res.json({ content });
+    const { profileNickname, weeklyAverageScore, scoreDiffFromLastWeek, weeklyAverageIntake, nutritionGoals } = req.body;
+    const result = await generateReportReview({ profileNickname, weeklyAverageScore, scoreDiffFromLastWeek, weeklyAverageIntake, nutritionGoals });
+
+    let parsed;
+    try {
+      parsed = JSON.parse(result);
+    } catch {
+      return res.status(500).json({ success: false, message: 'AI 응답 파싱 실패' });
+    }
+
+    res.json({
+      success: true,
+      review: parsed.review,
+      improvementPoints: parsed.improvementPoints,
+      recommendedFoods: parsed.recommendedFoods,
+    });
   } catch (error) {
     console.error('reportReview error:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 }
 

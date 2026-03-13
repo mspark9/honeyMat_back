@@ -48,7 +48,7 @@ export async function generateFoodTags({ foodname, kcal, carbs, protein, fat, su
 }
 
 // 주간 AI 리뷰 생성 (gpt-4o-mini)
-export async function generateReportReview(aiPayload) {
+export async function generateReportReview({ profileNickname, weeklyAverageScore, scoreDiffFromLastWeek, weeklyAverageIntake, nutritionGoals }) {
   const content = await callOpenAI({
     model: 'gpt-4o-mini',
     temperature: 0.4,
@@ -59,7 +59,35 @@ export async function generateReportReview(aiPayload) {
       },
       {
         role: 'user',
-        content: `아래 리포트 데이터를 기반으로 주간 리뷰를 작성해줘.\n\n데이터: ${JSON.stringify(aiPayload)}\n\n반환 형식(JSON만):\n{\n  "review": "2문장 이내 한글 리뷰",\n  "improvementPoints": ["개선 포인트 1", "개선 포인트 2", "개선 포인트 3"],\n  "recommendedFoods": [\n    {\n      "name": "음식명",\n      "description": "추천 이유 1문장",\n      "kcal": 0,\n      "carbs": 0,\n      "protein": 0,\n      "fat": 0,\n      "sugar": 0,\n      "tags": ["#고단백"]\n    }\n  ]\n}\n\n규칙:\n- review는 과도한 과장 없이 데이터 기반으로 작성\n- improvementPoints는 정확히 3개\n- recommendedFoods는 2~3개\n- tags는 #으로 시작`,
+        content: `아래 데이터를 기반으로 ${profileNickname}님의 주간 식단 리뷰를 작성해줘.
+
+주간 평균 점수: ${weeklyAverageScore}점 (지난주 대비 ${scoreDiffFromLastWeek > 0 ? '+' : ''}${scoreDiffFromLastWeek}점)
+주간 평균 섭취량: ${JSON.stringify(weeklyAverageIntake)}
+영양 목표: ${JSON.stringify(nutritionGoals)}
+
+반환 형식(JSON만):
+{
+  "review": "2문장 이내 한글 리뷰",
+  "improvementPoints": ["개선 포인트 1", "개선 포인트 2", "개선 포인트 3"],
+  "recommendedFoods": [
+    {
+      "name": "음식명",
+      "description": "추천 이유 1문장",
+      "kcal": 0,
+      "carbs": 0,
+      "protein": 0,
+      "fat": 0,
+      "sugar": 0,
+      "tags": ["#고단백"]
+    }
+  ]
+}
+
+규칙:
+- review는 과도한 과장 없이 데이터 기반으로 작성
+- improvementPoints는 정확히 3개
+- recommendedFoods는 2~3개
+- tags는 #으로 시작`,
       },
     ],
   });
