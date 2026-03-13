@@ -34,7 +34,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'https://honeymat.site'],
+    origin: ['http://localhost:5173', 'https://honeymat.site', 'https://www.honeymat.site', 'https://backend.mspark.site'],
     credentials: true,
   }),
 );
