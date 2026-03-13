@@ -27,12 +27,12 @@ export async function chat(req, res) {
 
 export async function foodTags(req, res) {
   try {
-    const { name, kcal, carbs, protein, fat, sugar } = req.body;
-    const tags = await generateFoodTags({ name, kcal, carbs, protein, fat, sugar });
-    res.json({ tags });
+    const { foodname, kcal, carbs, protein, fat, sugar } = req.body;
+    const tags = await generateFoodTags({ foodname, kcal, carbs, protein, fat, sugar });
+    res.json({ success: true, foodname, tags });
   } catch (error) {
     console.error('foodTags error:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 }
 
