@@ -1,8 +1,29 @@
+import OpenAI from 'openai';
 import {
   generateFoodTags,
   generateReportReview,
   refreshRecommendedFoods,
 } from '../services/aiService.js';
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+export async function chat(req, res) {
+  try {
+    const { messages, model = 'gpt-3.5-turbo', temperature = 0.7 } = req.body;
+
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ message: 'messages 배열이 필요합니다.' });
+    }
+
+    const completion = await openai.chat.completions.create({ model, messages, temperature });
+    const content = completion.choices[0].message.content;
+
+    res.json({ content });
+  } catch (error) {
+    console.error('chat error:', error);
+    res.status(500).json({ message: error.message });
+  }
+}
 
 export async function foodTags(req, res) {
   try {
