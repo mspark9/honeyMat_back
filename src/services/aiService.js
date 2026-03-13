@@ -23,14 +23,14 @@ async function callOpenAI({ model, messages, temperature }) {
 }
 
 // 음식 태그 생성 (gpt-3.5-turbo)
-export async function generateFoodTags({ name, kcal, carbs, protein, fat, sugar }) {
+export async function generateFoodTags({ foodname, kcal, carbs, protein, fat, sugar }) {
   const content = await callOpenAI({
     model: 'gpt-3.5-turbo',
     temperature: 0.3,
     messages: [
       {
         role: 'user',
-        content: `음식명: ${name}, 칼로리: ${kcal}, 탄수: ${carbs}, 단백질: ${protein}, 지방: ${fat}, 당: ${sugar}`,
+        content: `음식명: ${foodname}, 칼로리: ${kcal}, 탄수: ${carbs}, 단백질: ${protein}, 지방: ${fat}, 당: ${sugar}`,
       },
       {
         role: 'assistant',
