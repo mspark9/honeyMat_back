@@ -62,11 +62,22 @@ export async function reportReview(req, res) {
 
 export async function recommendFoods(req, res) {
   try {
-    const { aiPayload, review, improvementPoints } = req.body;
-    const content = await refreshRecommendedFoods({ aiPayload, review, improvementPoints });
-    res.json({ content });
+    const { currentReview, weeklyAverageIntake, nutritionGoals } = req.body;
+    const result = await refreshRecommendedFoods({ currentReview, weeklyAverageIntake, nutritionGoals });
+
+    let parsed;
+    try {
+      parsed = JSON.parse(result);
+    } catch {
+      return res.status(500).json({ success: false, message: 'AI 응답 파싱 실패' });
+    }
+
+    res.json({
+      success: true,
+      recommendedFoods: parsed.recommendedFoods,
+    });
   } catch (error) {
     console.error('recommendFoods error:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 }
