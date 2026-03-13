@@ -13,6 +13,7 @@ import { calculateDailyNutritionGoals } from "../services/goalCalculationService
 import { sendVerificationEmail } from "../services/emailService.js";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import s3 from "../config/s3.js";
+import { toCloudFrontUrl } from "../utils/urlHelper.js";
 
 // require('dotenv').config(); // Removed for ES module compatibility/redundancy
 
@@ -26,7 +27,7 @@ const signup = async (req, res) => {
         } = req.body;
 
         if (req.file) {
-            profile_image_url = req.file.location; // S3 전체 URL 활용
+            profile_image_url = req.file.location; // S3 URL (DB 저장용)
         }
 
         // 필수 값 검증
@@ -61,7 +62,7 @@ const signup = async (req, res) => {
                 id: newUser.id,
                 email: newUser.email,
                 nickname: newUser.nickname,
-                profileImageUrl: newUser.profile_image_url,
+                profileImageUrl: toCloudFrontUrl(newUser.profile_image_url),
                 gender: newUser.gender,
                 ageGroup: newUser.age_group,
                 height: newUser.height,
@@ -291,7 +292,7 @@ const getMyProfile = async (req, res) => {
             success: true,
             data: {
                 nickname: user.nickname,
-                profileImageUrl: user.profile_image_url || null,
+                profileImageUrl: toCloudFrontUrl(user.profile_image_url) || null,
                 gender: user.gender || null,
                 ageGroup: user.age_group || null,
                 height: user.height || null,
@@ -357,7 +358,7 @@ const updateMyProfile = async (req, res) => {
             data: {
                 id: updatedUser.id,
                 nickname: updatedUser.nickname,
-                profileImageUrl: updatedUser.profile_image_url || null,
+                profileImageUrl: toCloudFrontUrl(updatedUser.profile_image_url) || null,
                 height: updatedUser.height || null,
                 weight: updatedUser.weight || null,
                 goals: updatedUser.goals ? (typeof updatedUser.goals === 'string' ? JSON.parse(updatedUser.goals) : updatedUser.goals) : [],
@@ -412,12 +413,12 @@ const uploadProfileImageHandler = async (req, res) => {
             return res.status(400).json({ success: false, message: "이미지 파일이 필요합니다." });
         }
 
-        const profileImageUrl = req.file.location;
+        const profileImageUrl = req.file.location; // S3 URL (DB 저장용)
         await updateProfileImage(userId, profileImageUrl);
 
         return res.status(200).json({
             success: true,
-            profileImage: profileImageUrl
+            profileImage: toCloudFrontUrl(profileImageUrl) // 클라이언트에는 CloudFront URL 반환
         });
     } catch (error) {
         console.error("uploadProfileImageHandler 에러:", error);
