@@ -2,7 +2,7 @@ import { pool } from '../../database/databaseConnect.js';
 import { getOrCreateGoals } from '../models/nutritionGoalsModel.js';
 import { insertDeficiencyAlert } from '../models/deficiencyAlertsModel.js';
 
-/**
+/***
  * “특정 사용자가 특정 날짜에 먹은 영양소를 계산해서, 목표치보다 부족한 게 있는지 확인하는 코드임
  * diary_entries snap_* 합계 + nutrition_goals 기준
  */
