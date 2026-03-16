@@ -23,6 +23,7 @@ import notificationsRouter, {
 } from './src/routes/notifications.routes.js';
 import { startNotificationCron } from './src/cron/notificationCron.js';
 import recommendRoutes from './src/routes/recommend.routes.js';
+import aiRoutes from './src/routes/ai.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './database/swagger.js';
 
@@ -33,7 +34,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'https://honeymat.site'],
+    origin: ['http://localhost:5173', 'https://honeymat.site', 'https://www.honeymat.site', 'https://backend.mspark.site'],
     credentials: true,
   }),
 );
@@ -59,6 +60,7 @@ app.use('/api/foods', foodsRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/recommend', recommendRoutes);
+app.use('/api/ai', aiRoutes);
 
 // app.get("/api/db/ping", async (req, res) => {
 //   try {
