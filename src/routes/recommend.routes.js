@@ -10,10 +10,27 @@ const router = express.Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Recommend
+ *   description: 식단 추천
+ */
+
+/**
+ * @swagger
  * /api/recommend/random:
  *   get:
- *     summary: 초기 랜덤 식단 조회
+ *     summary: 초기 랜덤 식단 목록 조회
  *     tags: [Recommend]
+ *     responses:
+ *       200:
+ *         description: 랜덤 식품 목록 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data: { type: array, items: { type: object } }
  */
 router.get('/random', getRandomFoodList);
 
@@ -23,6 +40,23 @@ router.get('/random', getRandomFoodList);
  *   get:
  *     summary: 키워드로 관련 음식 검색 (접두어 제외)
  *     tags: [Recommend]
+ *     parameters:
+ *       - in: query
+ *         name: keyword
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 검색 키워드
+ *     responses:
+ *       200:
+ *         description: 관련 식품 목록 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data: { type: array, items: { type: object } }
  */
 router.get('/related', getRelatedFoodList);
 

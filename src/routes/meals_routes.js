@@ -83,37 +83,89 @@ router.get("/search", async (req, res) => {
  * @swagger
  * /api/meals:
  *   post:
- *     summary: Log a meal
+ *     summary: 식단 기록 추가
  *     tags: [Meals]
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
  *               - userId
+ *               - foodCode
  *             properties:
  *               userId:
  *                 type: string
+ *                 description: 사용자 ID (필수)
  *               foodCode:
  *                 type: string
+ *                 description: 식품 코드 (필수)
  *               foodName:
  *                 type: string
+ *                 description: 식품명 (선택)
  *               servings:
  *                 type: number
  *                 default: 1
+ *                 description: 섭취 횟수
+ *               servingSize:
+ *                 type: number
+ *                 description: 1회 제공량 (g)
+ *               calories:
+ *                 type: number
+ *                 description: 칼로리 (직접 입력 시 우선 적용)
+ *               carbohydrate:
+ *                 type: number
+ *               protein:
+ *                 type: number
+ *               fat:
+ *                 type: number
+ *               sugars:
+ *                 type: number
  *               mealType:
  *                 type: string
  *                 enum: [breakfast, lunch, dinner, snack]
  *               mealTime:
  *                 type: string
  *                 format: date-time
+ *               memo:
+ *                 type: string
+ *                 description: 메모 (선택)
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: 식단 이미지 (선택, 최대 10MB)
  *     responses:
  *       200:
- *         description: Meal logged successful
+ *         description: 식단 기록 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: string }
+ *                     userId: { type: string }
+ *                     foodCode: { type: string }
+ *                     foodName: { type: string }
+ *                     mealType: { type: string }
+ *                     servings: { type: number }
+ *                     mealTime: { type: string, format: date-time }
+ *                     calories: { type: number }
+ *                     nutrients:
+ *                       type: object
+ *                       properties:
+ *                         carbs: { type: number }
+ *                         protein: { type: number }
+ *                         fat: { type: number }
+ *                         sugar: { type: number }
+ *                     memo: { type: string }
+ *                     imageUrl: { type: string }
  *       400:
- *         description: Invalid input
+ *         description: 필수값 누락 또는 유효하지 않은 foodCode
  */
 router.post("/", upload.single("image"), async (req, res) => {
     try {
