@@ -203,6 +203,7 @@ export const recommendFoodsByAI = async (req, res) => {
     return res.status(200).json({
       success: true,
       reply: cleanTextMessage,
+      recommendedNames: searchKeywords,
       foods: responseFoodsList,
     });
   } catch (error) {
