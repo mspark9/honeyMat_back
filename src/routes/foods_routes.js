@@ -5,6 +5,53 @@ import { pool } from '../../database/databaseConnect.js';
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   name: Foods
+ *   description: 식품 데이터 관리
+ */
+
+/**
+ * @swagger
+ * /api/foods/sheet/import:
+ *   post:
+ *     summary: 구글 시트 CSV에서 식품 데이터 가져오기 (upsert)
+ *     tags: [Foods]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               csvUrl:
+ *                 type: string
+ *                 description: 구글 시트 CSV URL (생략 시 기본 URL 사용)
+ *               mode:
+ *                 type: string
+ *                 enum: [upsert, insert]
+ *                 default: upsert
+ *               uniqueKey:
+ *                 type: string
+ *                 default: food_code
+ *               mapping:
+ *                 type: object
+ *                 description: CSV 컬럼명 → DB 컬럼명 매핑 (생략 시 기본 매핑 사용)
+ *     responses:
+ *       200:
+ *         description: 임포트 완료
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 message: { type: string }
+ *                 successCount: { type: integer }
+ *                 failCount: { type: integer }
+ *       400:
+ *         description: 잘못된 요청
+ */
 router.post('/sheet/import', async (req, res) => {
     try {
         let {
@@ -149,7 +196,33 @@ router.post('/sheet/import', async (req, res) => {
     }
 });
 
-// 테스트용: 식품명으로 데이터 검색 (예: GET /api/foods/search?name=식혜)
+/**
+ * @swagger
+ * /api/foods/search:
+ *   get:
+ *     summary: 식품명으로 식품 검색
+ *     tags: [Foods]
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 검색할 식품명 (예&#58; 식혜)
+ *     responses:
+ *       200:
+ *         description: 검색 결과 (최대 10건)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 count: { type: integer }
+ *                 data: { type: array, items: { type: object } }
+ *       400:
+ *         description: 검색어 누락
+ */
 router.get('/search', async (req, res) => {
     try {
         const { name } = req.query;
