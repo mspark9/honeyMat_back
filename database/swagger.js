@@ -10,8 +10,8 @@ const options = {
         },
         servers: [
             {
-                url: "http://localhost:8000",
-                description: "Local server",
+                url: "https://backend.mspark.site",
+                description: "Production server",
             },
         ],
         components: {
