@@ -15,7 +15,7 @@ const router = express.Router();
  * @swagger
  * /api/diary/daily:
  *   get:
- *     summary: Get all diet records for a specific date
+ *     summary: 특정 날짜의 전체 식단 기록 조회
  *     tags: [Diary]
  *     parameters:
  *       - in: query
@@ -23,19 +23,38 @@ const router = express.Router();
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the user
+ *         description: 사용자 ID
  *       - in: query
  *         name: date
  *         required: true
  *         schema:
  *           type: string
  *           format: date
- *         description: Date (YYYY-MM-DD)
+ *         description: 조회 날짜 (YYYY-MM-DD)
  *     responses:
  *       200:
- *         description: List of diary entries
+ *         description: 날짜별 식단 기록 및 영양 요약
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 date: { type: string }
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     calories: { type: number }
+ *                     carbs: { type: number }
+ *                     protein: { type: number }
+ *                     fat: { type: number }
+ *                     sugar: { type: number }
+ *                 breakfast: { type: object }
+ *                 lunch: { type: object }
+ *                 dinner: { type: object }
+ *                 snack: { type: object }
  *       400:
- *         description: Missing userId or date
+ *         description: userId 또는 date 누락
  */
 router.get('/daily', async (req, res) => {
   try {
