@@ -33,10 +33,31 @@ const cronAuth = (req, res, next) => {
 
 /**
  * @swagger
+ * tags:
+ *   name: Notifications
+ *   description: 알림 관리
+ */
+
+/**
+ * @swagger
  * /api/notifications:
  *   get:
  *     summary: 알림 목록 조회
  *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 알림 목록 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data: { type: array, items: { type: object } }
+ *       401:
+ *         description: 인증 필요
  */
 router.get("/", requireAuth, getNotifications);
 
@@ -46,19 +67,42 @@ router.get("/", requireAuth, getNotifications);
  *   patch:
  *     summary: 알림 읽음 처리
  *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *         description: 알림 ID
+ *     responses:
+ *       200:
+ *         description: 읽음 처리 성공
+ *       401:
+ *         description: 인증 필요
+ *       404:
+ *         description: 알림 없음
  */
 router.patch("/:id/read", requireAuth, readNotification);
 
 /**
- * POST /api/notifications/jobs/meal-nudge
- * 식사 기록 유도 알림 배치 (cron에서 15~30분마다 호출)
- * 헤더: X-Cron-Secret (CRON_SECRET 설정 시 필수)
+ * @swagger
+ * /api/notifications/jobs/meal-nudge:
+ *   post:
+ *     summary: 식사 기록 유도 알림 배치 (cron 전용)
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cron-Secret
+ *         schema:
+ *           type: string
+ *         description: CRON_SECRET 설정 시 필수
+ *     responses:
+ *       200:
+ *         description: 배치 실행 성공
+ *       401:
+ *         description: 인증 실패
  */
 router.post("/jobs/meal-nudge", cronAuth, async (req, res) => {
   try {
@@ -71,8 +115,21 @@ router.post("/jobs/meal-nudge", cronAuth, async (req, res) => {
 });
 
 /**
- * POST /api/notifications/jobs/streak-nudge
- * 연속 기록 응원 알림 배치 (cron에서 1일 1회, 예: 23:00 호출)
+ * @swagger
+ * /api/notifications/jobs/streak-nudge:
+ *   post:
+ *     summary: 연속 기록 응원 알림 배치 (cron 전용, 1일 1회 ~23:00)
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cron-Secret
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 배치 실행 성공
+ *       401:
+ *         description: 인증 실패
  */
 router.post("/jobs/streak-nudge", cronAuth, async (req, res) => {
   try {
@@ -85,8 +142,21 @@ router.post("/jobs/streak-nudge", cronAuth, async (req, res) => {
 });
 
 /**
- * POST /api/notifications/jobs/insight-sugar-fat
- * 당류/지방 주의 알림 배치 (cron에서 14:00, 20:30 등 식사 후 호출)
+ * @swagger
+ * /api/notifications/jobs/insight-sugar-fat:
+ *   post:
+ *     summary: 당류/지방 주의 알림 배치 (cron 전용, 14:00/20:30)
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cron-Secret
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 배치 실행 성공
+ *       401:
+ *         description: 인증 실패
  */
 router.post("/jobs/insight-sugar-fat", cronAuth, async (req, res) => {
   try {
@@ -99,8 +169,21 @@ router.post("/jobs/insight-sugar-fat", cronAuth, async (req, res) => {
 });
 
 /**
- * POST /api/notifications/jobs/insight-protein
- * 단백질 채우기 제안 알림 배치 (저녁 19:00~22:00, cron에서 1회 호출)
+ * @swagger
+ * /api/notifications/jobs/insight-protein:
+ *   post:
+ *     summary: 단백질 채우기 제안 알림 배치 (cron 전용, 19:00~22:00)
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cron-Secret
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 배치 실행 성공
+ *       401:
+ *         description: 인증 실패
  */
 router.post("/jobs/insight-protein", cronAuth, async (req, res) => {
   try {
@@ -113,8 +196,21 @@ router.post("/jobs/insight-protein", cronAuth, async (req, res) => {
 });
 
 /**
- * POST /api/notifications/jobs/recommendation-tomorrow
- * 내일의 식단 제안 알림 배치 (저녁 20:00~22:00)
+ * @swagger
+ * /api/notifications/jobs/recommendation-tomorrow:
+ *   post:
+ *     summary: 내일의 식단 제안 알림 배치 (cron 전용, 20:00~22:00)
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cron-Secret
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 배치 실행 성공
+ *       401:
+ *         description: 인증 실패
  */
 router.post("/jobs/recommendation-tomorrow", cronAuth, async (req, res) => {
   try {
@@ -127,8 +223,21 @@ router.post("/jobs/recommendation-tomorrow", cronAuth, async (req, res) => {
 });
 
 /**
- * POST /api/notifications/jobs/recommendation-menu
- * 메뉴 고민 해결 알림 (날씨 연동, 11:00~12:00 / 17:00~18:00)
+ * @swagger
+ * /api/notifications/jobs/recommendation-menu:
+ *   post:
+ *     summary: 메뉴 고민 해결 알림 배치 (cron 전용, 날씨 연동, 11:00~12:00/17:00~18:00)
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cron-Secret
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 배치 실행 성공
+ *       401:
+ *         description: 인증 실패
  */
 router.post("/jobs/recommendation-menu", cronAuth, async (req, res) => {
   try {
@@ -141,8 +250,21 @@ router.post("/jobs/recommendation-menu", cronAuth, async (req, res) => {
 });
 
 /**
- * POST /api/notifications/jobs/weekly-report
- * 주간 리포트 발행 알림 (월요일 08:00~10:00)
+ * @swagger
+ * /api/notifications/jobs/weekly-report:
+ *   post:
+ *     summary: 주간 리포트 발행 알림 배치 (cron 전용, 월요일 08:00~10:00)
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cron-Secret
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 배치 실행 성공
+ *       401:
+ *         description: 인증 실패
  */
 router.post("/jobs/weekly-report", cronAuth, async (req, res) => {
   try {
@@ -155,8 +277,21 @@ router.post("/jobs/weekly-report", cronAuth, async (req, res) => {
 });
 
 /**
- * POST /api/notifications/jobs/daily-summaries
- * 전일 diary_entries가 있는 사용자들의 daily_summaries 갱신
+ * @swagger
+ * /api/notifications/jobs/daily-summaries:
+ *   post:
+ *     summary: daily_summaries 갱신 배치 (cron 전용)
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cron-Secret
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 배치 실행 성공
+ *       401:
+ *         description: 인증 실패
  */
 router.post("/jobs/daily-summaries", cronAuth, async (req, res) => {
   try {
@@ -169,8 +304,21 @@ router.post("/jobs/daily-summaries", cronAuth, async (req, res) => {
 });
 
 /**
- * POST /api/notifications/jobs/goal-achievement
- * 목표 달성 축하 알림 (월요일 08:00~10:00)
+ * @swagger
+ * /api/notifications/jobs/goal-achievement:
+ *   post:
+ *     summary: 목표 달성 축하 알림 배치 (cron 전용, 월요일 08:00~10:00)
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cron-Secret
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 배치 실행 성공
+ *       401:
+ *         description: 인증 실패
  */
 router.post("/jobs/goal-achievement", cronAuth, async (req, res) => {
   try {
@@ -192,13 +340,301 @@ router.post("/jobs/goal-achievement", cronAuth, async (req, res) => {
 export default router;
 export const settingsRouter = express.Router();
 
+/**
+ * @swagger
+ * /api/users/me/notification-settings:
+ *   get:
+ *     summary: 알림 수신 설정 조회
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 알림 설정 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     receiveNotifications: { type: boolean }
+ *   put:
+ *     summary: 알림 수신 설정 수정
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               receiveNotifications:
+ *                 type: boolean
+ *                 description: 알림 수신 여부
+ *     responses:
+ *       200:
+ *         description: 수정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     receiveNotifications: { type: boolean }
+ */
 settingsRouter.get("/me/notification-settings", requireAuth, getSettings);
 settingsRouter.put("/me/notification-settings", requireAuth, updateSettings);
+
+/**
+ * @swagger
+ * /api/users/me/meal-pattern:
+ *   get:
+ *     summary: 식사 패턴 조회
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 식사 패턴 반환
+ *   put:
+ *     summary: 식사 패턴 수정
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               breakfastTime:
+ *                 type: string
+ *                 example: "08:00"
+ *               lunchTime:
+ *                 type: string
+ *                 example: "12:30"
+ *               dinnerTime:
+ *                 type: string
+ *                 example: "19:00"
+ *     responses:
+ *       200:
+ *         description: 수정 성공
+ */
 settingsRouter.get("/me/meal-pattern", requireAuth, getPattern);
 settingsRouter.put("/me/meal-pattern", requireAuth, updatePattern);
+
+/**
+ * @swagger
+ * /api/users/me/notification-type-settings:
+ *   get:
+ *     summary: 알림 유형별 설정 조회
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 알림 유형별 설정 반환
+ *   put:
+ *     summary: 알림 유형별 설정 수정
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               meal_nudge:
+ *                 type: object
+ *                 properties:
+ *                   enabled: { type: boolean }
+ *                   config:
+ *                     type: object
+ *                     properties:
+ *                       breakfastTime: { type: string, example: "08:00" }
+ *                       lunchTime: { type: string, example: "12:30" }
+ *                       dinnerTime: { type: string, example: "19:00" }
+ *     responses:
+ *       200:
+ *         description: 수정 성공
+ */
 settingsRouter.get("/me/notification-type-settings", requireAuth, getNotificationTypeSettings);
 settingsRouter.put("/me/notification-type-settings", requireAuth, updateNotificationTypeSettings);
+
+/**
+ * @swagger
+ * /api/users/me/nutrition-goals:
+ *   get:
+ *     summary: 영양 목표 조회
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 조회 날짜 (YYYY-MM-DD, 생략 시 오늘)
+ *     responses:
+ *       200:
+ *         description: 영양 목표 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     date: { type: string }
+ *                     targetCalories: { type: number }
+ *                     targetCarbohydrate: { type: number }
+ *                     targetProtein: { type: number }
+ *                     targetFat: { type: number }
+ *                     targetSugars: { type: number }
+ */
 settingsRouter.get("/me/nutrition-goals", requireAuth, getNutritionGoals);
+
+/**
+ * @swagger
+ * /api/users/me/daily-summary:
+ *   get:
+ *     summary: 특정 날짜 일별 영양 요약 조회
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 조회 날짜 (YYYY-MM-DD, 생략 시 오늘)
+ *     responses:
+ *       200:
+ *         description: 일별 요약 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     date: { type: string }
+ *                     calories: { type: number }
+ *                     carbohydrate: { type: number }
+ *                     protein: { type: number }
+ *                     fat: { type: number }
+ *                     sugars: { type: number }
+ *                     score: { type: number }
+ *                     goalAchieved: { type: boolean }
+ */
 settingsRouter.get("/me/daily-summary", requireAuth, getDailySummary);
+
+/**
+ * @swagger
+ * /api/users/me/daily-summaries:
+ *   get:
+ *     summary: 날짜 범위 일별 영양 요약 조회 (주간 리포트용)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: startDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 시작 날짜 (YYYY-MM-DD)
+ *       - in: query
+ *         name: endDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 종료 날짜 (YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: 날짜 범위 요약 목록 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       date: { type: string }
+ *                       calories: { type: number }
+ *                       carbohydrate: { type: number }
+ *                       protein: { type: number }
+ *                       fat: { type: number }
+ *                       sugars: { type: number }
+ *                       score: { type: number }
+ *                       goalAchieved: { type: boolean }
+ *       400:
+ *         description: startDate 또는 endDate 누락
+ */
 settingsRouter.get("/me/daily-summaries", requireAuth, getDailySummaries);
+
+/**
+ * @swagger
+ * /api/users/me/today-recommend:
+ *   get:
+ *     summary: 홈 화면용 오늘의 추천 문구 + 추천 식품 조회
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 조회 날짜 (YYYY-MM-DD, 생략 시 오늘)
+ *     responses:
+ *       200:
+ *         description: 오늘의 추천 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message: { type: string, description: 추천 한 줄 문구 }
+ *                     foods:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id: { type: string }
+ *                           name: { type: string }
+ *                           description: { type: string }
+ *                           tags: { type: array, items: { type: string } }
+ *                           kcal: { type: number }
+ *                           carbs: { type: number }
+ *                           protein: { type: number }
+ *                           fat: { type: number }
+ *                           sugar: { type: number }
+ *                           image: { type: string }
+ */
 settingsRouter.get("/me/today-recommend", requireAuth, getTodayRecommend);

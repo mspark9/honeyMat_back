@@ -15,7 +15,7 @@ const router = express.Router();
  * @swagger
  * /api/diary/daily:
  *   get:
- *     summary: Get all diet records for a specific date
+ *     summary: 특정 날짜의 전체 식단 기록 조회
  *     tags: [Diary]
  *     parameters:
  *       - in: query
@@ -23,19 +23,38 @@ const router = express.Router();
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the user
+ *         description: 사용자 ID
  *       - in: query
  *         name: date
  *         required: true
  *         schema:
  *           type: string
  *           format: date
- *         description: Date (YYYY-MM-DD)
+ *         description: 조회 날짜 (YYYY-MM-DD)
  *     responses:
  *       200:
- *         description: List of diary entries
+ *         description: 날짜별 식단 기록 및 영양 요약
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 date: { type: string }
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     calories: { type: number }
+ *                     carbs: { type: number }
+ *                     protein: { type: number }
+ *                     fat: { type: number }
+ *                     sugar: { type: number }
+ *                 breakfast: { type: object }
+ *                 lunch: { type: object }
+ *                 dinner: { type: object }
+ *                 snack: { type: object }
  *       400:
- *         description: Missing userId or date
+ *         description: userId 또는 date 누락
  */
 router.get('/daily', async (req, res) => {
   try {
@@ -302,8 +321,23 @@ router.get('/monthly', async (req, res) => {
 });
 
 /**
- * [GET] /api/diary/:id
- * 특정 식단 기록 상세 조회
+ * @swagger
+ * /api/diary/{id}:
+ *   get:
+ *     summary: 특정 식단 기록 상세 조회
+ *     tags: [Diary]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 다이어리 항목 ID
+ *     responses:
+ *       200:
+ *         description: 식단 기록 반환
+ *       404:
+ *         description: 기록 없음
  */
 router.get('/:id', async (req, res) => {
   try {
@@ -327,8 +361,38 @@ router.get('/:id', async (req, res) => {
 });
 // test1
 /**
- * [PATCH] /api/diary/:id
- * 특정 식단 기록 수정 (양, 식사 타입, 시간 등)
+ * @swagger
+ * /api/diary/{id}:
+ *   patch:
+ *     summary: 특정 식단 기록 수정 (양, 식사 타입, 시간)
+ *     tags: [Diary]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 다이어리 항목 ID
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               serving_size:
+ *                 type: number
+ *                 description: 섭취량
+ *               mealType:
+ *                 type: string
+ *                 enum: [breakfast, lunch, dinner, snack]
+ *               mealTime:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       200:
+ *         description: 수정 성공
+ *       404:
+ *         description: 기록 없음
  */
 router.patch('/:id', async (req, res) => {
   try {
@@ -365,8 +429,23 @@ router.patch('/:id', async (req, res) => {
 });
 
 /**
- * [DELETE] /api/diary/:id
- * 특정 식단 기록 삭제
+ * @swagger
+ * /api/diary/{id}:
+ *   delete:
+ *     summary: 특정 식단 기록 삭제
+ *     tags: [Diary]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 다이어리 항목 ID
+ *     responses:
+ *       200:
+ *         description: 삭제 성공
+ *       404:
+ *         description: 기록 없음
  */
 router.delete('/:id', async (req, res) => {
   try {
