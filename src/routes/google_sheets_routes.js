@@ -4,9 +4,38 @@ import { parse } from 'csv-parse/sync';
 
 const router = express.Router();
 
-// GET /api/google-sheets
-// 구글 시트 CSV URL을 query parameter(?url=...)로 받아 파싱합니다.
-// URL 쿼리를 넘기지 않으면 아래의 기본 URL이 사용됩니다.
+/**
+ * @swagger
+ * tags:
+ *   name: GoogleSheets
+ *   description: 구글 시트 CSV 데이터 조회
+ */
+
+/**
+ * @swagger
+ * /api/google-sheets:
+ *   get:
+ *     summary: 구글 시트 CSV 파싱 후 JSON 반환
+ *     tags: [GoogleSheets]
+ *     parameters:
+ *       - in: query
+ *         name: url
+ *         schema:
+ *           type: string
+ *         description: 구글 시트 CSV URL (생략 시 기본 URL 사용)
+ *     responses:
+ *       200:
+ *         description: CSV를 JSON 배열로 변환하여 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data: { type: array, items: { type: object } }
+ *       500:
+ *         description: CSV 파싱 실패
+ */
 router.get('/', async (req, res) => {
   try {
     const defaultUrl =

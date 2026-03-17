@@ -33,10 +33,31 @@ const cronAuth = (req, res, next) => {
 
 /**
  * @swagger
+ * tags:
+ *   name: Notifications
+ *   description: 알림 관리
+ */
+
+/**
+ * @swagger
  * /api/notifications:
  *   get:
  *     summary: 알림 목록 조회
  *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 알림 목록 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data: { type: array, items: { type: object } }
+ *       401:
+ *         description: 인증 필요
  */
 router.get("/", requireAuth, getNotifications);
 
@@ -46,12 +67,22 @@ router.get("/", requireAuth, getNotifications);
  *   patch:
  *     summary: 알림 읽음 처리
  *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *         description: 알림 ID
+ *     responses:
+ *       200:
+ *         description: 읽음 처리 성공
+ *       401:
+ *         description: 인증 필요
+ *       404:
+ *         description: 알림 없음
  */
 router.patch("/:id/read", requireAuth, readNotification);
 
