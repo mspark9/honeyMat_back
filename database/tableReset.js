@@ -15,7 +15,7 @@ async function run() {
         connectionString: process.env.DATABASE_URL,
         ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
     });
-    // test
+
     try {
         const sqlPath = path.join(process.cwd(), "database", "table.sql");
         const sql = fs.readFileSync(sqlPath, "utf-8");
