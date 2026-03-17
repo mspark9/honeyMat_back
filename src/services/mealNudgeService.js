@@ -33,12 +33,12 @@ function timeToMinutes(str) {
 }
 
 /**
- * 현재 시각이 설정 시간과 일치하는지 (정해진 시각 HH:MM에만)
+ * 현재 시각이 설정 시간과 일치하는지 (±1분 허용)
  */
 function isInUserTimeWindow(configuredStr, currentMinutes) {
   const configured = timeToMinutes(configuredStr);
   if (configured == null) return false;
-  return currentMinutes === configured;
+  return Math.abs(currentMinutes - configured) <= 1;
 }
 
 /**
