@@ -29,13 +29,13 @@ export async function generateFoodTags({ foodname, kcal, carbs, protein, fat, su
     temperature: 0.3,
     messages: [
       {
-        role: 'system',
-        content:
-          '당신은 영양사입니다. 영양성분 데이터를 보고 [#고단백, #다이어트, #비건, #저탄수, #0kcal, #저당, #과일, #저지방, #고지방, #고칼로리, #고당] 중 적합한 태그를 골라 JSON 배열 형태로만 응답하세요. 예: ["#고단백"]. 해당 없으면 [] 반환.',
-      },
-      {
         role: 'user',
         content: `음식명: ${foodname}, 칼로리: ${kcal}, 탄수: ${carbs}, 단백질: ${protein}, 지방: ${fat}, 당: ${sugar}`,
+      },
+      {
+        role: 'assistant',
+        content:
+          '당신은 영양사입니다. 영양성분 데이터를 보고 [#고단백, #다이어트, #비건, #저탄수, #0kcal, #저당, #과일, #저지방, #고지방, #고칼로리, #고당] 중 적합한 태그를 골라 JSON 배열 형태로만 응답하세요. 예: ["#고단백"]. 해당 없으면 [] 반환.',
       },
     ],
   });
