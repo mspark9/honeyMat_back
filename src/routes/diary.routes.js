@@ -302,8 +302,23 @@ router.get('/monthly', async (req, res) => {
 });
 
 /**
- * [GET] /api/diary/:id
- * 특정 식단 기록 상세 조회
+ * @swagger
+ * /api/diary/{id}:
+ *   get:
+ *     summary: 특정 식단 기록 상세 조회
+ *     tags: [Diary]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 다이어리 항목 ID
+ *     responses:
+ *       200:
+ *         description: 식단 기록 반환
+ *       404:
+ *         description: 기록 없음
  */
 router.get('/:id', async (req, res) => {
   try {
@@ -327,8 +342,38 @@ router.get('/:id', async (req, res) => {
 });
 // test1
 /**
- * [PATCH] /api/diary/:id
- * 특정 식단 기록 수정 (양, 식사 타입, 시간 등)
+ * @swagger
+ * /api/diary/{id}:
+ *   patch:
+ *     summary: 특정 식단 기록 수정 (양, 식사 타입, 시간)
+ *     tags: [Diary]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 다이어리 항목 ID
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               serving_size:
+ *                 type: number
+ *                 description: 섭취량
+ *               mealType:
+ *                 type: string
+ *                 enum: [breakfast, lunch, dinner, snack]
+ *               mealTime:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       200:
+ *         description: 수정 성공
+ *       404:
+ *         description: 기록 없음
  */
 router.patch('/:id', async (req, res) => {
   try {
@@ -365,8 +410,23 @@ router.patch('/:id', async (req, res) => {
 });
 
 /**
- * [DELETE] /api/diary/:id
- * 특정 식단 기록 삭제
+ * @swagger
+ * /api/diary/{id}:
+ *   delete:
+ *     summary: 특정 식단 기록 삭제
+ *     tags: [Diary]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 다이어리 항목 ID
+ *     responses:
+ *       200:
+ *         description: 삭제 성공
+ *       404:
+ *         description: 기록 없음
  */
 router.delete('/:id', async (req, res) => {
   try {
