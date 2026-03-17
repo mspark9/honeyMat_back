@@ -344,15 +344,25 @@ export const settingsRouter = express.Router();
  * @swagger
  * /api/users/me/notification-settings:
  *   get:
- *     summary: 알림 설정 조회
+ *     summary: 알림 수신 설정 조회
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: 알림 설정 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     receiveNotifications: { type: boolean }
  *   put:
- *     summary: 알림 설정 수정
+ *     summary: 알림 수신 설정 수정
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -361,9 +371,23 @@ export const settingsRouter = express.Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             properties:
+ *               receiveNotifications:
+ *                 type: boolean
+ *                 description: 알림 수신 여부
  *     responses:
  *       200:
  *         description: 수정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     receiveNotifications: { type: boolean }
  */
 settingsRouter.get("/me/notification-settings", requireAuth, getSettings);
 settingsRouter.put("/me/notification-settings", requireAuth, updateSettings);
@@ -389,6 +413,16 @@ settingsRouter.put("/me/notification-settings", requireAuth, updateSettings);
  *         application/json:
  *           schema:
  *             type: object
+ *             properties:
+ *               breakfastTime:
+ *                 type: string
+ *                 example: "08:00"
+ *               lunchTime:
+ *                 type: string
+ *                 example: "12:30"
+ *               dinnerTime:
+ *                 type: string
+ *                 example: "19:00"
  *     responses:
  *       200:
  *         description: 수정 성공
@@ -400,15 +434,15 @@ settingsRouter.put("/me/meal-pattern", requireAuth, updatePattern);
  * @swagger
  * /api/users/me/notification-type-settings:
  *   get:
- *     summary: 알림 타입별 설정 조회
+ *     summary: 알림 유형별 설정 조회
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: 알림 타입 설정 반환
+ *         description: 알림 유형별 설정 반환
  *   put:
- *     summary: 알림 타입별 설정 수정
+ *     summary: 알림 유형별 설정 수정
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -417,6 +451,17 @@ settingsRouter.put("/me/meal-pattern", requireAuth, updatePattern);
  *         application/json:
  *           schema:
  *             type: object
+ *             properties:
+ *               meal_nudge:
+ *                 type: object
+ *                 properties:
+ *                   enabled: { type: boolean }
+ *                   config:
+ *                     type: object
+ *                     properties:
+ *                       breakfastTime: { type: string, example: "08:00" }
+ *                       lunchTime: { type: string, example: "12:30" }
+ *                       dinnerTime: { type: string, example: "19:00" }
  *     responses:
  *       200:
  *         description: 수정 성공
@@ -432,9 +477,31 @@ settingsRouter.put("/me/notification-type-settings", requireAuth, updateNotifica
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 조회 날짜 (YYYY-MM-DD, 생략 시 오늘)
  *     responses:
  *       200:
  *         description: 영양 목표 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     date: { type: string }
+ *                     targetCalories: { type: number }
+ *                     targetCarbohydrate: { type: number }
+ *                     targetProtein: { type: number }
+ *                     targetFat: { type: number }
+ *                     targetSugars: { type: number }
  */
 settingsRouter.get("/me/nutrition-goals", requireAuth, getNutritionGoals);
 
@@ -442,13 +509,37 @@ settingsRouter.get("/me/nutrition-goals", requireAuth, getNutritionGoals);
  * @swagger
  * /api/users/me/daily-summary:
  *   get:
- *     summary: 오늘 일일 요약 조회
+ *     summary: 특정 날짜 일별 영양 요약 조회
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 조회 날짜 (YYYY-MM-DD, 생략 시 오늘)
  *     responses:
  *       200:
- *         description: 일일 요약 반환
+ *         description: 일별 요약 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     date: { type: string }
+ *                     calories: { type: number }
+ *                     carbohydrate: { type: number }
+ *                     protein: { type: number }
+ *                     fat: { type: number }
+ *                     sugars: { type: number }
+ *                     score: { type: number }
+ *                     goalAchieved: { type: boolean }
  */
 settingsRouter.get("/me/daily-summary", requireAuth, getDailySummary);
 
@@ -456,13 +547,49 @@ settingsRouter.get("/me/daily-summary", requireAuth, getDailySummary);
  * @swagger
  * /api/users/me/daily-summaries:
  *   get:
- *     summary: 복수 일일 요약 조회
+ *     summary: 날짜 범위 일별 영양 요약 조회 (주간 리포트용)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: startDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 시작 날짜 (YYYY-MM-DD)
+ *       - in: query
+ *         name: endDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 종료 날짜 (YYYY-MM-DD)
  *     responses:
  *       200:
- *         description: 일일 요약 목록 반환
+ *         description: 날짜 범위 요약 목록 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       date: { type: string }
+ *                       calories: { type: number }
+ *                       carbohydrate: { type: number }
+ *                       protein: { type: number }
+ *                       fat: { type: number }
+ *                       sugars: { type: number }
+ *                       score: { type: number }
+ *                       goalAchieved: { type: boolean }
+ *       400:
+ *         description: startDate 또는 endDate 누락
  */
 settingsRouter.get("/me/daily-summaries", requireAuth, getDailySummaries);
 
@@ -470,12 +597,44 @@ settingsRouter.get("/me/daily-summaries", requireAuth, getDailySummaries);
  * @swagger
  * /api/users/me/today-recommend:
  *   get:
- *     summary: 오늘의 식단 추천 조회
+ *     summary: 홈 화면용 오늘의 추천 문구 + 추천 식품 조회
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 조회 날짜 (YYYY-MM-DD, 생략 시 오늘)
  *     responses:
  *       200:
  *         description: 오늘의 추천 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message: { type: string, description: 추천 한 줄 문구 }
+ *                     foods:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id: { type: string }
+ *                           name: { type: string }
+ *                           description: { type: string }
+ *                           tags: { type: array, items: { type: string } }
+ *                           kcal: { type: number }
+ *                           carbs: { type: number }
+ *                           protein: { type: number }
+ *                           fat: { type: number }
+ *                           sugar: { type: number }
+ *                           image: { type: string }
  */
 settingsRouter.get("/me/today-recommend", requireAuth, getTodayRecommend);

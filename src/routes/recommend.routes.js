@@ -19,7 +19,7 @@ const router = express.Router();
  * @swagger
  * /api/recommend/random:
  *   get:
- *     summary: 초기 랜덤 식단 목록 조회
+ *     summary: 초기 랜덤 식단 5개 조회
  *     tags: [Recommend]
  *     responses:
  *       200:
@@ -30,7 +30,21 @@ const router = express.Router();
  *               type: object
  *               properties:
  *                 success: { type: boolean }
- *                 data: { type: array, items: { type: object } }
+ *                 message: { type: string }
+ *                 foods:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: string }
+ *                       name: { type: string }
+ *                       image: { type: string }
+ *                       kcal: { type: number }
+ *                       carbs: { type: number }
+ *                       protein: { type: number }
+ *                       fat: { type: number }
+ *                       sugar: { type: number }
+ *                       status: { type: string }
  */
 router.get('/random', getRandomFoodList);
 
@@ -43,10 +57,21 @@ router.get('/random', getRandomFoodList);
  *     parameters:
  *       - in: query
  *         name: keyword
- *         required: true
  *         schema:
  *           type: string
  *         description: 검색 키워드
+ *       - in: query
+ *         name: exclude
+ *         schema:
+ *           type: string
+ *         description: 제외할 접두어
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *           maximum: 20
+ *         description: 결과 개수 (최대 20)
  *     responses:
  *       200:
  *         description: 관련 식품 목록 반환
@@ -56,7 +81,20 @@ router.get('/random', getRandomFoodList);
  *               type: object
  *               properties:
  *                 success: { type: boolean }
- *                 data: { type: array, items: { type: object } }
+ *                 foods:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: string }
+ *                       name: { type: string }
+ *                       image: { type: string }
+ *                       kcal: { type: number }
+ *                       carbs: { type: number }
+ *                       protein: { type: number }
+ *                       fat: { type: number }
+ *                       sugar: { type: number }
+ *                       status: { type: string }
  */
 router.get('/related', getRelatedFoodList);
 
@@ -64,22 +102,53 @@ router.get('/related', getRelatedFoodList);
  * @swagger
  * /api/recommend/save:
  *   post:
- *     summary: AI 챗봇 식단 추천 (키워드 추출 후 DB 검색 매핑) 및 저장
+ *     summary: AI 챗봇 식단 추천 및 저장
  *     tags: [Recommend]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - messages
  *             properties:
- *               message:
+ *               messages:
+ *                 type: array
+ *                 description: 대화 히스토리 배열
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     role: { type: string, enum: [user, assistant] }
+ *                     content: { type: string }
+ *               inputMessage:
  *                 type: string
- *                 description: 추천 요청 메시지
+ *                 description: 현재 사용자 입력 메시지 (생략 시 "추천 메뉴를 알려주세요.")
  *     responses:
  *       200:
  *         description: 추천 및 저장 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 chatContent: { type: string, description: AI 텍스트 응답 }
+ *                 foods:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: string }
+ *                       name: { type: string }
+ *                       image: { type: string }
+ *                       kcal: { type: number }
+ *                       carbs: { type: number }
+ *                       protein: { type: number }
+ *                       fat: { type: number }
+ *                       sugar: { type: number }
  *       401:
  *         description: 인증 필요
  */
