@@ -6,22 +6,22 @@ import { pool } from '../../database/databaseConnect.js';
  */
 export const getRandomFoods = async (limit = 5) => {
   const query = `
-    SELECT 
-        food_code AS id, 
-        food_name AS name, 
-        -- image_url이 foods 테이블에 없으면 null을 반환합니다. 
-        -- 만약 있다면 column 이름을 맞추어 수정하세요.
-        null AS image ,
+    SELECT
+        food_code AS id,
+        food_name AS name,
+        null AS image,
         calories AS kcal,
         carbohydrate AS carbs,
         protein,
         fat,
         sugars AS sugar,
         null AS status
-        
-        
-    FROM foods 
-    ORDER BY RANDOM() 
+    FROM foods
+    WHERE (calories IS NULL OR calories <= 600)
+      AND (protein IS NULL OR protein >= 5)
+      AND (sugars IS NULL OR sugars <= 30)
+      AND (saturated_fat IS NULL OR saturated_fat <= 10)
+    ORDER BY RANDOM()
     LIMIT $1
   `;
   try {
