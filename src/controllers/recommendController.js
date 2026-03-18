@@ -169,18 +169,6 @@ export const recommendFoodsByAI = async (req, res) => {
       }
     }
 
-    // 4. DB에서 음식 검색
-    let recommendedFoods = await searchFoodsByKeywords(searchKeywords);
-
-    // 영양 기준 필터 (칼로리 ≤600, 단백질 ≥5, 당류 ≤30, 포화지방 ≤10)
-    const isHealthy = (f) =>
-      f.kcal != null && f.kcal <= 600 &&
-      f.protein != null && f.protein >= 5 &&
-      f.sugar != null && f.sugar <= 30;
-    recommendedFoods = recommendedFoods.filter(isHealthy);
-
-    if (!recommendedFoods || recommendedFoods.length === 0) {
-      recommendedFoods = await getRandomFoods(3);
     // 5. DB 검색 및 중복 제거
     let rawFoods = await searchFoodsByKeywords(searchKeywords);
     const uniqueFoodsMap = new Map();
@@ -192,9 +180,15 @@ export const recommendFoodsByAI = async (req, res) => {
       .map((name) => uniqueFoodsMap.get(name))
       .filter(Boolean);
 
+    // 영양 기준 필터 (칼로리 ≤600, 단백질 ≥5, 당류 ≤30)
+    const isHealthy = (f) =>
+      f.kcal != null && f.kcal <= 600 &&
+      f.protein != null && f.protein >= 5 &&
+      f.sugar != null && f.sugar <= 30;
+    recommendedFoods = recommendedFoods.filter(isHealthy);
+
     if (recommendedFoods.length === 0) {
-      // 초기 랜덤 로드 외 추천 플로우에서는 랜덤 추천을 사용하지 않음
-      recommendedFoods = [];
+      recommendedFoods = await getRandomFoods(3);
     }
 
     // 6. 필터링 및 명세서 양식 매핑
