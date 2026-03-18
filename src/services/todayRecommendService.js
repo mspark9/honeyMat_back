@@ -9,6 +9,22 @@ const MIN_PROTEIN_DEFICIT = 15;  // 15g 이상 부족 시
 const EXCEED_RATIO = 1.2;        // 목표의 120% 초과 시
 const GOOD_SCORE = 80;           // 80점 이상이면 양호
 
+// 로그인마다 새 메시지를 보여주기 위한 인메모리 캐시
+// key: `${userId}:${dateStr}`, value: string
+const messageCache = new Map();
+
+/**
+ * 로그인 시 해당 유저의 메시지 캐시를 초기화
+ * @param {string} userId
+ */
+export function clearTodayMessageCache(userId) {
+  for (const key of messageCache.keys()) {
+    if (key.startsWith(`${userId}:`)) {
+      messageCache.delete(key);
+    }
+  }
+}
+
 /**
  * 오늘의 추천 한 줄 문구 생성
  * @param {string} userId
@@ -16,6 +32,11 @@ const GOOD_SCORE = 80;           // 80점 이상이면 양호
  * @returns {Promise<string>}
  */
 export async function getTodayMessage(userId, dateStr) {
+  const cacheKey = `${userId}:${dateStr}`;
+  if (messageCache.has(cacheKey)) {
+    return messageCache.get(cacheKey);
+  }
+
   const [summary, goals] = await Promise.all([
     summarizeDay(userId, dateStr),
     getOrCreateGoals(userId, dateStr),
@@ -93,9 +114,10 @@ export async function getTodayMessage(userId, dateStr) {
   }
 
   // 후보가 있으면 랜덤 선택, 없으면 기본 메시지
-  if (candidates.length > 0) {
-    return candidates[Math.floor(Math.random() * candidates.length)];
-  }
+  const message = candidates.length > 0
+    ? candidates[Math.floor(Math.random() * candidates.length)]
+    : '오늘 메뉴 고민되시죠? AI가 맛있는 식단을 추천해 드릴게요! 🍽️';
 
-  return '오늘 메뉴 고민되시죠? AI가 맛있는 식단을 추천해 드릴게요! 🍽️';
+  messageCache.set(cacheKey, message);
+  return message;
 }
