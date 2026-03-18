@@ -9,6 +9,7 @@ import {
     findUserById, updateProfile, updateProfileImage, deleteUser
 } from "../models/userModel.js";
 import { upsertGoals } from "../models/nutritionGoalsModel.js";
+import { clearTodayMessageCache } from "../services/todayRecommendService.js";
 import { calculateDailyNutritionGoals } from "../services/goalCalculationService.js";
 import { sendVerificationEmail } from "../services/emailService.js";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
@@ -125,6 +126,8 @@ const login = async (req, res) => {
             sameSite: 'lax',
             maxAge: 30 * 24 * 60 * 60 * 1000 // 30일
         });
+
+        clearTodayMessageCache(user.id);
 
         return res.status(200).json({
             message: "로그인 성공",
