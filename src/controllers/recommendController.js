@@ -105,13 +105,24 @@ export const recommendFoodsByAI = async (req, res) => {
     const promptMessages = [
       {
         role: 'system',
-        content: `당신은 전문 영양사입니다. 사용자의 영양 상태에 맞춰 식단을 추천하세요.
-          [응답 규칙]
-          1. 한국어로 친절하게 답변하되, 답변 내에 #, *, &, @ 등 특수문자와 태그는 절대 사용하지 마세요.
-          2. 추천 메뉴 데이터는 반드시 마지막에 [DATA][{"name": "음식명", "description": "설명"}][/DATA] 형식으로 포함하세요.
-          3. 실제 음식 DB에서 검색 가능한 메뉴명을 사용하세요.
-          4. 답변 양식: 간단한 설명 후 '1. 메뉴이름: 추천이유' 순서로 작성하고 마지막에 카드 확인 권유 문구를 넣으세요.
-          [사용자정보] ${userContext}`,
+        content: `당신은 전문 영양사입니다. 사용자의 건강 목표에 맞춰 영양적으로 균형 잡힌 한국 식단을 추천하세요.
+[응답 규칙]
+1. 모든 대화는 한국어로 진행하며 친절하게 설명하세요.
+2. 추천하는 구체적인 메뉴 데이터는 반드시 답변 마지막에 [DATA]와 [/DATA] 태그로 감싸서 JSON 배열 형식으로 포함하세요.
+3. JSON 구조: [{"name": "음식명", "description": "설명", "tags": ["태그1", "태그2"]}]
+4. tags는 반드시 다음 목록에서만 선택하세요: ${filterTags.join(', ')}.
+5. 한 번에 3~5개의 메뉴를 추천하고 실제 음식 DB에서 검색 가능한 메뉴명을 사용하세요.
+6. 추천된 메뉴는 중복되지 않도록 하세요.
+7. 없는 식단을 만들어내지 마세요.
+8. 텍스트 답변에서는 특수문자 *, &, ^, %, $, #, @, ;를 출력하지 마세요.
+9. 답변 양식: 간단한 설명 후 번호. 메뉴이름: 추천이유 순서로 작성하고 마지막에 카드 확인 권유 문구를 넣으세요.
+[영양 기준] 추천 음식은 반드시 아래 기준을 충족해야 합니다:
+- 1회 제공량 기준 칼로리 600kcal 이하
+- 단백질 5g 이상
+- 당류 30g 이하
+- 포화지방 10g 이하
+- 피자, 햄버거, 치킨, 라면, 과자, 케이크 등 고칼로리 가공식품은 절대 추천하지 마세요.
+[사용자정보] ${userContext}`,
       },
       ...messages
         .filter(
@@ -158,6 +169,18 @@ export const recommendFoodsByAI = async (req, res) => {
       }
     }
 
+    // 4. DB에서 음식 검색
+    let recommendedFoods = await searchFoodsByKeywords(searchKeywords);
+
+    // 영양 기준 필터 (칼로리 ≤600, 단백질 ≥5, 당류 ≤30, 포화지방 ≤10)
+    const isHealthy = (f) =>
+      f.kcal != null && f.kcal <= 600 &&
+      f.protein != null && f.protein >= 5 &&
+      f.sugar != null && f.sugar <= 30;
+    recommendedFoods = recommendedFoods.filter(isHealthy);
+
+    if (!recommendedFoods || recommendedFoods.length === 0) {
+      recommendedFoods = await getRandomFoods(3);
     // 5. DB 검색 및 중복 제거
     let rawFoods = await searchFoodsByKeywords(searchKeywords);
     const uniqueFoodsMap = new Map();
