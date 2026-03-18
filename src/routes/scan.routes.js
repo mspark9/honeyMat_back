@@ -38,6 +38,18 @@ const uploadDisk = multer({
   },
 });
 
+// multer 에러(확장자 불일치 등)를 콘솔 폭탄 없이 JSON 400으로 처리
+function upload(multerMiddleware) {
+  return (req, res, next) => {
+    multerMiddleware(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({ success: false, message: err.message });
+      }
+      next();
+    });
+  };
+}
+
 /**
  * @swagger
  * tags:
@@ -98,7 +110,7 @@ const uploadDisk = multer({
  *       400:
  *         description: 이미지 없음 또는 형식 오류
  */
-router.post('/food', uploadDisk.single('image'), scanController.analyzeFood);
+router.post('/food', upload(uploadDisk.single('image')), scanController.analyzeFood);
 
 /**
  * @swagger
@@ -211,6 +223,6 @@ router.post('/food/reanalyze', express.json(), scanController.reanalyzeFood);
  *         description: 저장할 음식 정보 없음
  */
 // router.post('/save-ai', requireAuth, uploadDisk.single('image'), scanController.saveAi);
-router.post('/save-diary', requireAuth, uploadDisk.single('image'), scanController.saveDiary);
+router.post('/save-diary', requireAuth, upload(uploadDisk.single('image')), scanController.saveDiary);
 
 export default router;

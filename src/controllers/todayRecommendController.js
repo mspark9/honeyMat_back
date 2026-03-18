@@ -14,7 +14,7 @@ export async function getTodayRecommend(req, res) {
       return res.status(401).json({ success: false, message: '인증이 필요합니다.' });
     }
 
-    const dateStr = req.query.date || new Date().toISOString().slice(0, 10);
+    const dateStr = req.query.date || new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
 
     const [message, rawFoods, user] = await Promise.all([
       getTodayMessage(userId, dateStr),

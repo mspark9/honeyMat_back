@@ -4,28 +4,40 @@ import { pool } from '../../database/databaseConnect.js';
  * DB에서 지정된 개수만큼 랜덤하게 음식을 가져옵니다.
  * @param {number} limit 조회할 음식 수 (기본값: 5)
  */
+const UNHEALTHY_KEYWORDS = [
+  '피자', '치킨', '햄버거', '라면', '과자', '케이크', '도넛', '핫도그',
+  '튀김', '콜라', '사이다', '탄산', '아이스크림', '초콜릿', '캔디',
+  '감자칩', '팝콘', '소시지', '베이컨', '족발', '보쌈', '삼겹살',
+];
+
 export const getRandomFoods = async (limit = 5) => {
+  const excludeConditions = UNHEALTHY_KEYWORDS
+    .map((_, i) => `food_name NOT ILIKE $${i + 2}`)
+    .join(' AND ');
+
   const query = `
-    SELECT 
-        food_code AS id, 
-        food_name AS name, 
-        -- image_url이 foods 테이블에 없으면 null을 반환합니다. 
-        -- 만약 있다면 column 이름을 맞추어 수정하세요.
-        null AS image ,
+    SELECT
+        food_code AS id,
+        food_name AS name,
+        null AS image,
         calories AS kcal,
         carbohydrate AS carbs,
         protein,
         fat,
         sugars AS sugar,
         null AS status
-        
-        
-    FROM foods 
-    ORDER BY RANDOM() 
+    FROM foods
+    WHERE (calories IS NULL OR calories <= 600)
+      AND (protein IS NULL OR protein >= 3)
+      AND (sugars IS NULL OR sugars <= 40)
+      AND ${excludeConditions}
+    ORDER BY RANDOM()
     LIMIT $1
   `;
+
+  const values = [limit, ...UNHEALTHY_KEYWORDS.map((kw) => `%${kw}%`)];
   try {
-    const { rows } = await pool.query(query, [limit]);
+    const { rows } = await pool.query(query, values);
     return rows;
   } catch (error) {
     console.error('getRandomFoods 에러:', error);
