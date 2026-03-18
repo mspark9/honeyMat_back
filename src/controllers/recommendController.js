@@ -130,7 +130,7 @@ export const recommendFoodsByAI = async (req, res) => {
     const promptMessages = [
       {
         role: 'system',
-        content: `당신은 전문 영양사입니다. 사용자의 요청에 맞춰 한국의 실제 식단을 추천하세요.
+        content: `당신은 전문 영양사입니다. 사용자의 건강 목표에 맞춰 영양적으로 균형 잡힌 한국 식단을 추천하세요.
 [응답 규칙]
 1. 모든 대화는 한국어로 진행하며 친절하게 설명하세요.
 2. 추천하는 구체적인 메뉴 데이터는 반드시 답변 마지막에 [DATA]와 [/DATA] 태그로 감싸서 JSON 배열 형식으로 포함하세요.
@@ -141,6 +141,12 @@ export const recommendFoodsByAI = async (req, res) => {
 7. 없는 식단을 만들어내지 마세요.
 8. 텍스트 답변에서는 특수문자 *, &, ^, %, $, #, @, ;를 출력하지 마세요.
 9. 답변 양식: 간단한 설명 후 번호. 메뉴이름: 추천이유 순서로 작성하고 마지막에 카드 확인 권유 문구를 넣으세요.
+[영양 기준] 추천 음식은 반드시 아래 기준을 충족해야 합니다:
+- 1회 제공량 기준 칼로리 600kcal 이하
+- 단백질 5g 이상
+- 당류 30g 이하
+- 포화지방 10g 이하
+- 피자, 햄버거, 치킨, 라면, 과자, 케이크 등 고칼로리 가공식품은 절대 추천하지 마세요.
 [사용자정보] ${userContext}`,
       },
       ...messages
@@ -186,6 +192,14 @@ export const recommendFoodsByAI = async (req, res) => {
 
     // 4. DB에서 음식 검색
     let recommendedFoods = await searchFoodsByKeywords(searchKeywords);
+
+    // 영양 기준 필터 (칼로리 ≤600, 단백질 ≥5, 당류 ≤30, 포화지방 ≤10)
+    const isHealthy = (f) =>
+      f.kcal != null && f.kcal <= 600 &&
+      f.protein != null && f.protein >= 5 &&
+      f.sugar != null && f.sugar <= 30;
+    recommendedFoods = recommendedFoods.filter(isHealthy);
+
     if (!recommendedFoods || recommendedFoods.length === 0) {
       recommendedFoods = await getRandomFoods(3);
     }
