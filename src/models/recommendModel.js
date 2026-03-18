@@ -27,10 +27,9 @@ export const getRandomFoods = async (limit = 5) => {
         sugars AS sugar,
         null AS status
     FROM foods
-    WHERE calories IS NOT NULL AND calories <= 600
-      AND protein IS NOT NULL AND protein >= 5
-      AND sugars IS NOT NULL AND sugars <= 30
-      AND saturated_fat IS NOT NULL AND saturated_fat <= 10
+    WHERE (calories IS NULL OR calories <= 600)
+      AND (protein IS NULL OR protein >= 3)
+      AND (sugars IS NULL OR sugars <= 40)
       AND ${excludeConditions}
     ORDER BY RANDOM()
     LIMIT $1
