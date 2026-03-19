@@ -12,6 +12,7 @@ import {
   filterFoodsByUser,
 } from '../utils/allergyFilter.js';
 
+// filter tags defined
 const filterTags = [
   '#고단백',
   '#다이어트',
