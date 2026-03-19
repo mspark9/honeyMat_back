@@ -12,6 +12,20 @@ import {
   filterFoodsByUser,
 } from '../utils/allergyFilter.js';
 
+const filterTags = [
+  '#고단백',
+  '#다이어트',
+  '#비건',
+  '#저탄수',
+  '#0kcal',
+  '#저당',
+  '#과일',
+  '#저지방',
+  '#고지방',
+  '#고칼로리',
+  '#고당',
+];
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
